@@ -113,7 +113,6 @@ class _PhillipCapitalAdditionalDetailsScreenState
         child: SafeArea(
           child: Column(
             children: [
-              // Header with white background
               Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
@@ -123,19 +122,7 @@ class _PhillipCapitalAdditionalDetailsScreenState
                 ),
                 child: const OnboardingHeaderWidget(),
               ),
-              Expanded(
-                child: Row(
-                  children: [
-                    const ProgressSidebarWidget(),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(40.0),
-                        child: _buildFormContent(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              Expanded(child: _buildResponsiveLayout(context)),
             ],
           ),
         ),
@@ -143,15 +130,81 @@ class _PhillipCapitalAdditionalDetailsScreenState
     );
   }
 
-  Widget _buildFormContent() {
+  Widget _buildResponsiveLayout(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+
+    // Define breakpoints
+    final isMobile = width < 600;
+    final isTablet = width >= 600 && width < 1024;
+    final isDesktop = width >= 1024;
+
+    if (isMobile) {
+      // Mobile: No sidebar, single column form
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: _buildFormContent(isMobile: true, isTablet: false),
+      );
+    } else if (isTablet) {
+      // Tablet: No sidebar, but wider form
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: _buildFormContent(isMobile: false, isTablet: true),
+      );
+    } else {
+      // Desktop: Sidebar + form
+      return Row(
+        children: [
+          const ProgressSidebarWidget(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(40.0),
+              child: _buildFormContent(isMobile: false, isTablet: false),
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
+  Widget _buildFormContent({required bool isMobile, required bool isTablet}) {
+    // Responsive padding and margins
+    final contentPadding =
+        isMobile
+            ? 20.0
+            : isTablet
+            ? 30.0
+            : 40.0;
+    final contentMargin =
+        isMobile
+            ? 0.0
+            : isTablet
+            ? 10.0
+            : 20.0;
+    final titleSize = isMobile ? 24.0 : 28.0;
+    final columnSpacing =
+        isMobile
+            ? 20.0
+            : isTablet
+            ? 30.0
+            : 40.0;
+    final buttonWidth =
+        isMobile
+            ? double.infinity
+            : isTablet
+            ? 400.0
+            : 300.0;
+
     return Center(
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 1000),
-        padding: const EdgeInsets.all(40.0),
-        margin: const EdgeInsets.all(20.0),
+        constraints: BoxConstraints(
+          maxWidth: isMobile ? double.infinity : 1000,
+        ),
+        padding: EdgeInsets.all(contentPadding),
+        margin: EdgeInsets.all(contentMargin),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -163,10 +216,10 @@ class _PhillipCapitalAdditionalDetailsScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Additional Details',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: titleSize,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textDark,
               ),
@@ -176,134 +229,28 @@ class _PhillipCapitalAdditionalDetailsScreenState
               'Please provide accurate information for account verification',
               style: TextStyle(fontSize: 14, color: AppColors.textGray),
             ),
-            const SizedBox(height: 40),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left Column
-                Expanded(
-                  child: Column(
-                    children: [
-                      AppDropdownField(
-                        label: 'Occupation Type',
-                        hint: 'Select',
-                        items: _occupationTypes,
-                        value: _selectedOccupationType,
-                        onChanged:
-                            (v) => setState(() => _selectedOccupationType = v),
-                      ),
-                      const SizedBox(height: 20),
-                      AppTextField(
-                        label: 'Name of Company/Business',
-                        hint: 'Enter company name',
-                        controller: _companyNameController,
-                      ),
-                      const SizedBox(height: 20),
-                      AppTextField(
-                        label: 'Years of Experience',
-                        hint: 'e.g. 5',
-                        controller: _experienceController,
-                      ),
-                      const SizedBox(height: 20),
-                      AppDropdownField(
-                        label: 'Income Range',
-                        hint: 'Select range',
-                        items: _incomeRanges,
-                        value: _selectedIncomeRange,
-                        onChanged:
-                            (v) => setState(() => _selectedIncomeRange = v),
-                      ),
-                      const SizedBox(height: 20),
-                      AppTextField(
-                        label: 'Educational Qualification',
-                        hint: 'e.g. B.Tech',
-                        controller: _educationController,
-                      ),
-                      const SizedBox(height: 20),
-                      AppDropdownField(
-                        label: 'Preference for running Account Settlement',
-                        hint: 'Select',
-                        items: _accountSettlements,
-                        value: _selectedAccountSettlement,
-                        onChanged:
-                            (v) =>
-                                setState(() => _selectedAccountSettlement = v),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 40),
-                // Right Column
-                Expanded(
-                  child: Column(
-                    children: [
-                      AppTextField(
-                        label: 'Work Profile',
-                        hint: 'e.g. Software Engineer',
-                        controller: _workProfileController,
-                      ),
-                      const SizedBox(height: 20),
-                      AppTextField(
-                        label: 'Address of Occupation',
-                        hint: 'Enter address',
-                        controller: _addressController,
-                      ),
-                      const SizedBox(height: 20),
-                      AppDropdownField(
-                        label: 'Who will place the Order',
-                        hint: 'Select',
-                        items: _orderPlacers,
-                        value: _selectedOrderPlacer,
-                        onChanged:
-                            (v) => setState(() => _selectedOrderPlacer = v),
-                      ),
-                      const SizedBox(height: 20),
-                      AppTextField(
-                        label: 'Net Worth',
-                        hint: 'e.g. 10 Lakhs',
-                        controller: _netWorthController,
-                      ),
-                      const SizedBox(height: 20),
-                      AppDropdownField(
-                        label: 'Trading/Investment Experience',
-                        hint: 'Select',
-                        items: _tradingExperiences,
-                        value: _selectedTradingExperience,
-                        onChanged:
-                            (v) =>
-                                setState(() => _selectedTradingExperience = v),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 40),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioQuestionWidget(
-                    question: 'Dealing with any other Broker?',
-                    value: _dealingWithOtherBroker,
-                    onChanged:
-                        (v) => setState(() => _dealingWithOtherBroker = v),
-                  ),
-                ),
-                const SizedBox(width: 40),
-                Expanded(
-                  child: RadioQuestionWidget(
-                    question: 'Electronic Contract Note(ECN)',
-                    value: _electronicContractNote,
-                    onChanged:
-                        (v) => setState(() => _electronicContractNote = v),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 60),
+            SizedBox(height: isMobile ? 30 : 40),
+
+            // Form fields - responsive layout
+            if (isMobile)
+              _buildMobileFormFields()
+            else
+              _buildDesktopFormFields(columnSpacing),
+
+            SizedBox(height: isMobile ? 30 : 40),
+
+            // Radio questions - responsive layout
+            if (isMobile)
+              _buildMobileRadioQuestions()
+            else
+              _buildDesktopRadioQuestions(columnSpacing),
+
+            SizedBox(height: isMobile ? 40 : 60),
+
+            // Submit button
             Center(
               child: SizedBox(
-                width: 300,
+                width: buttonWidth,
                 child: ElevatedButton(
                   onPressed: _proceedToNext,
                   style: ElevatedButton.styleFrom(
@@ -325,6 +272,231 @@ class _PhillipCapitalAdditionalDetailsScreenState
           ],
         ),
       ),
+    );
+  }
+
+  // Mobile: Single column layout
+  Widget _buildMobileFormFields() {
+    return Column(
+      children: [
+        AppDropdownField(
+          label: 'Occupation Type',
+          hint: 'Select',
+          items: _occupationTypes,
+          value: _selectedOccupationType,
+          onChanged: (v) => setState(() => _selectedOccupationType = v),
+        ),
+        const SizedBox(height: 20),
+        AppTextField(
+          label: 'Work Profile',
+          hint: 'e.g. Software Engineer',
+          controller: _workProfileController,
+        ),
+        const SizedBox(height: 20),
+        AppTextField(
+          label: 'Name of Company/Business',
+          hint: 'Enter company name',
+          controller: _companyNameController,
+        ),
+        const SizedBox(height: 20),
+        AppTextField(
+          label: 'Address of Occupation',
+          hint: 'Enter address',
+          controller: _addressController,
+        ),
+        const SizedBox(height: 20),
+        AppTextField(
+          label: 'Years of Experience',
+          hint: 'e.g. 5',
+          controller: _experienceController,
+        ),
+        const SizedBox(height: 20),
+        AppDropdownField(
+          label: 'Who will place the Order',
+          hint: 'Select',
+          items: _orderPlacers,
+          value: _selectedOrderPlacer,
+          onChanged: (v) => setState(() => _selectedOrderPlacer = v),
+        ),
+        const SizedBox(height: 20),
+        AppDropdownField(
+          label: 'Income Range',
+          hint: 'Select range',
+          items: _incomeRanges,
+          value: _selectedIncomeRange,
+          onChanged: (v) => setState(() => _selectedIncomeRange = v),
+        ),
+        const SizedBox(height: 20),
+        AppTextField(
+          label: 'Net Worth',
+          hint: 'e.g. 10 Lakhs',
+          controller: _netWorthController,
+        ),
+        const SizedBox(height: 20),
+        AppTextField(
+          label: 'Educational Qualification',
+          hint: 'e.g. B.Tech',
+          controller: _educationController,
+        ),
+        const SizedBox(height: 20),
+        AppDropdownField(
+          label: 'Trading/Investment Experience',
+          hint: 'Select',
+          items: _tradingExperiences,
+          value: _selectedTradingExperience,
+          onChanged: (v) => setState(() => _selectedTradingExperience = v),
+        ),
+        const SizedBox(height: 20),
+        AppDropdownField(
+          label: 'Preference for running Account Settlement',
+          hint: 'Select',
+          items: _accountSettlements,
+          value: _selectedAccountSettlement,
+          onChanged: (v) => setState(() => _selectedAccountSettlement = v),
+        ),
+      ],
+    );
+  }
+
+  // Desktop/Tablet: Two column layout
+  Widget _buildDesktopFormFields(double spacing) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left Column
+        Expanded(
+          child: Column(
+            children: [
+              AppDropdownField(
+                label: 'Occupation Type',
+                hint: 'Select',
+                items: _occupationTypes,
+                value: _selectedOccupationType,
+                onChanged: (v) => setState(() => _selectedOccupationType = v),
+              ),
+              const SizedBox(height: 20),
+              AppTextField(
+                label: 'Name of Company/Business',
+                hint: 'Enter company name',
+                controller: _companyNameController,
+              ),
+              const SizedBox(height: 20),
+              AppTextField(
+                label: 'Years of Experience',
+                hint: 'e.g. 5',
+                controller: _experienceController,
+              ),
+              const SizedBox(height: 20),
+              AppDropdownField(
+                label: 'Income Range',
+                hint: 'Select range',
+                items: _incomeRanges,
+                value: _selectedIncomeRange,
+                onChanged: (v) => setState(() => _selectedIncomeRange = v),
+              ),
+              const SizedBox(height: 20),
+              AppTextField(
+                label: 'Educational Qualification',
+                hint: 'e.g. B.Tech',
+                controller: _educationController,
+              ),
+              const SizedBox(height: 20),
+              AppDropdownField(
+                label: 'Preference for running Account Settlement',
+                hint: 'Select',
+                items: _accountSettlements,
+                value: _selectedAccountSettlement,
+                onChanged:
+                    (v) => setState(() => _selectedAccountSettlement = v),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: spacing),
+        // Right Column
+        Expanded(
+          child: Column(
+            children: [
+              AppTextField(
+                label: 'Work Profile',
+                hint: 'e.g. Software Engineer',
+                controller: _workProfileController,
+              ),
+              const SizedBox(height: 20),
+              AppTextField(
+                label: 'Address of Occupation',
+                hint: 'Enter address',
+                controller: _addressController,
+              ),
+              const SizedBox(height: 20),
+              AppDropdownField(
+                label: 'Who will place the Order',
+                hint: 'Select',
+                items: _orderPlacers,
+                value: _selectedOrderPlacer,
+                onChanged: (v) => setState(() => _selectedOrderPlacer = v),
+              ),
+              const SizedBox(height: 20),
+              AppTextField(
+                label: 'Net Worth',
+                hint: 'e.g. 10 Lakhs',
+                controller: _netWorthController,
+              ),
+              const SizedBox(height: 20),
+              AppDropdownField(
+                label: 'Trading/Investment Experience',
+                hint: 'Select',
+                items: _tradingExperiences,
+                value: _selectedTradingExperience,
+                onChanged:
+                    (v) => setState(() => _selectedTradingExperience = v),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Mobile: Stacked radio questions
+  Widget _buildMobileRadioQuestions() {
+    return Column(
+      children: [
+        RadioQuestionWidget(
+          question: 'Dealing with any other Broker?',
+          value: _dealingWithOtherBroker,
+          onChanged: (v) => setState(() => _dealingWithOtherBroker = v),
+        ),
+        const SizedBox(height: 20),
+        RadioQuestionWidget(
+          question: 'Electronic Contract Note(ECN)',
+          value: _electronicContractNote,
+          onChanged: (v) => setState(() => _electronicContractNote = v),
+        ),
+      ],
+    );
+  }
+
+  // Desktop/Tablet: Side-by-side radio questions
+  Widget _buildDesktopRadioQuestions(double spacing) {
+    return Row(
+      children: [
+        Expanded(
+          child: RadioQuestionWidget(
+            question: 'Dealing with any other Broker?',
+            value: _dealingWithOtherBroker,
+            onChanged: (v) => setState(() => _dealingWithOtherBroker = v),
+          ),
+        ),
+        SizedBox(width: spacing),
+        Expanded(
+          child: RadioQuestionWidget(
+            question: 'Electronic Contract Note(ECN)',
+            value: _electronicContractNote,
+            onChanged: (v) => setState(() => _electronicContractNote = v),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -46,100 +46,229 @@ class _EmailSectionWidgetState extends State<EmailSectionWidget> {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final containerWidth = constraints.maxWidth;
+
+        // Determine device type
+        final bool isMobile = screenWidth < 768;
+        final bool isTablet = screenWidth >= 768 && screenWidth < 1024;
+        final bool isVerySmall = screenWidth < 400;
+        final bool isUltraSmall = screenWidth < 350;
+
+        final bool hasText = _controller.text.isNotEmpty;
+        final Color borderColor = _getBorderColor(hasText);
+
+        return Container(
+          constraints: BoxConstraints(
+            maxWidth: _getMaxFormWidth(isMobile, isTablet, containerWidth),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTitle(isMobile, isVerySmall, isUltraSmall),
+              SizedBox(height: _getTitleSpacing(isMobile)),
+              _buildSubtitle(isMobile, isVerySmall, isUltraSmall),
+              SizedBox(height: _getSectionSpacing(isMobile, isVerySmall)),
+              _buildEmailSection(
+                isMobile,
+                isTablet,
+                isVerySmall,
+                isUltraSmall,
+                borderColor,
+              ),
+              SizedBox(height: _getSectionSpacing(isMobile, isVerySmall)),
+              _buildGetOtpButton(isMobile, isVerySmall),
+              SizedBox(height: _getSmallSpacing(isMobile)),
+              _buildTerms(isMobile, isVerySmall, isUltraSmall),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTitle(bool isMobile, bool isVerySmall, bool isUltraSmall) {
+    return Text(
+      'Enter Your Email',
+      style: TextStyle(
+        fontSize: _getTitleFontSize(isMobile, isVerySmall, isUltraSmall),
+        fontWeight: FontWeight.bold,
+        color: AppColors.textDark,
+        height: 1.2,
+      ),
+    );
+  }
+
+  Widget _buildSubtitle(bool isMobile, bool isVerySmall, bool isUltraSmall) {
+    return Text(
+      'or Resume pending application',
+      style: TextStyle(
+        fontSize: _getSubtitleFontSize(isMobile, isVerySmall, isUltraSmall),
+        color: AppColors.textGray,
+      ),
+    );
+  }
+
+  Widget _buildEmailSection(
+    bool isMobile,
+    bool isTablet,
+    bool isVerySmall,
+    bool isUltraSmall,
+    Color borderColor,
+  ) {
     final bool hasText = _controller.text.isNotEmpty;
-    final Color borderColor =
-        hasText
-            ? (_isValid ? AppColors.borderValid : AppColors.borderError)
-            : AppColors.borderColor;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Enter Your Email',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textDark,
-            height: 1.2,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'or Resume pending application',
-          style: TextStyle(fontSize: 14, color: AppColors.textGray),
-        ),
-        const SizedBox(height: 40),
-        const Text(
+        Text(
           'Email',
           style: TextStyle(
-            fontSize: 14,
+            fontSize: _getLabelFontSize(isMobile, isVerySmall, isUltraSmall),
             fontWeight: FontWeight.w500,
-            color: Color(0xFF374151),
+            color: const Color(0xFF374151),
           ),
         ),
-        const SizedBox(height: 8),
-        _buildEmailInput(borderColor),
-        const SizedBox(height: 8),
-        _buildValidationMessage(hasText),
-        const SizedBox(height: 32),
-        _buildGetOtpButton(),
-        const SizedBox(height: 16),
-        _buildTerms(),
+        SizedBox(height: _getSmallSpacing(isMobile)),
+        _buildEmailInput(
+          isMobile,
+          isTablet,
+          isVerySmall,
+          isUltraSmall,
+          borderColor,
+        ),
+        SizedBox(height: _getSmallSpacing(isMobile)),
+        _buildValidationMessage(isMobile, isVerySmall, isUltraSmall, hasText),
       ],
     );
   }
 
-  Widget _buildEmailInput(Color borderColor) {
+  Widget _buildEmailInput(
+    bool isMobile,
+    bool isTablet,
+    bool isVerySmall,
+    bool isUltraSmall,
+    Color borderColor,
+  ) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(
+          _getBorderRadius(isMobile, isVerySmall),
+        ),
+        border: Border.all(
+          color: borderColor,
+          width: _getBorderWidth(isMobile, _controller.text.isNotEmpty),
+        ),
         color: Colors.white,
+        boxShadow:
+            !isMobile && _controller.text.isNotEmpty
+                ? [
+                  BoxShadow(
+                    color: (_isValid
+                            ? AppColors.successGreen
+                            : AppColors.errorRed)
+                        .withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+                : null,
       ),
       child: TextFormField(
         controller: _controller,
         keyboardType: TextInputType.emailAddress,
         decoration: InputDecoration(
-          hintText: 'suhani@joshigmail.com',
-          hintStyle: const TextStyle(
+          hintText: _getHintText(isMobile, isVerySmall),
+          hintStyle: TextStyle(
             color: AppColors.disabledText,
-            fontSize: 16,
+            fontSize: _getInputFontSize(isMobile, isVerySmall, isUltraSmall),
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
+          contentPadding: _getInputPadding(isMobile, isTablet, isVerySmall),
           suffixIcon:
               _controller.text.isNotEmpty
-                  ? Icon(
-                    _isValid ? Icons.check_circle : Icons.error,
-                    color:
-                        _isValid ? AppColors.successGreen : AppColors.errorRed,
-                    size: 20,
+                  ? Container(
+                    margin: EdgeInsets.all(isVerySmall ? 8 : 12),
+                    child: Icon(
+                      _isValid ? Icons.check_circle : Icons.error,
+                      color:
+                          _isValid
+                              ? AppColors.successGreen
+                              : AppColors.errorRed,
+                      size: _getValidationIconSize(isMobile, isVerySmall),
+                    ),
                   )
                   : null,
         ),
-        style: const TextStyle(fontSize: 16, color: Color(0xFF374151)),
+        style: TextStyle(
+          fontSize: _getInputFontSize(isMobile, isVerySmall, isUltraSmall),
+          color: const Color(0xFF374151),
+          height: _getInputLineHeight(isMobile),
+        ),
       ),
     );
   }
 
-  Widget _buildValidationMessage(bool hasText) {
+  Widget _buildValidationMessage(
+    bool isMobile,
+    bool isVerySmall,
+    bool isUltraSmall,
+    bool hasText,
+  ) {
     if (hasText && !_isValid) {
-      return const Text(
-        'Please enter a valid email address',
-        style: TextStyle(fontSize: 12, color: AppColors.errorRed),
+      return Row(
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: _getMessageIconSize(isMobile, isVerySmall),
+            color: AppColors.errorRed,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'Please enter a valid email address',
+              style: TextStyle(
+                fontSize: _getMessageFontSize(
+                  isMobile,
+                  isVerySmall,
+                  isUltraSmall,
+                ),
+                color: AppColors.errorRed,
+              ),
+            ),
+          ),
+        ],
       );
     }
-    return const Text(
-      'You will receive OTP on mobile number',
-      style: TextStyle(fontSize: 12, color: AppColors.textGray),
+
+    return Row(
+      children: [
+        Icon(
+          Icons.info_outline,
+          size: _getMessageIconSize(isMobile, isVerySmall),
+          color: AppColors.textGray,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            'You will receive OTP on email address',
+            style: TextStyle(
+              fontSize: _getMessageFontSize(
+                isMobile,
+                isVerySmall,
+                isUltraSmall,
+              ),
+              color: AppColors.textGray,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildGetOtpButton() {
+  Widget _buildGetOtpButton(bool isMobile, bool isVerySmall) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -148,14 +277,20 @@ class _EmailSectionWidgetState extends State<EmailSectionWidget> {
           backgroundColor:
               _isValid ? AppColors.primaryOrange : AppColors.disabledBg,
           foregroundColor: _isValid ? Colors.white : AppColors.disabledText,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: EdgeInsets.symmetric(
+            vertical: _getButtonPadding(isMobile, isVerySmall),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              _getBorderRadius(isMobile, isVerySmall),
+            ),
+          ),
           elevation: 0,
         ),
         child: Text(
           'Get OTP',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: _getButtonFontSize(isMobile, isVerySmall),
             fontWeight: FontWeight.w600,
             color: _isValid ? Colors.white : AppColors.disabledText,
           ),
@@ -164,24 +299,48 @@ class _EmailSectionWidgetState extends State<EmailSectionWidget> {
     );
   }
 
-  Widget _buildTerms() {
+  Widget _buildTerms(bool isMobile, bool isVerySmall, bool isUltraSmall) {
     return Wrap(
       children: [
-        const Text(
+        Text(
           'By proceeding I Accept the ',
-          style: TextStyle(fontSize: 12, color: AppColors.textGray),
+          style: TextStyle(
+            fontSize: _getTermsFontSize(isMobile, isVerySmall, isUltraSmall),
+            color: AppColors.textGray,
+          ),
         ),
-        _link('T&C Privacy Policy', 'T&C Privacy Policy will open here'),
-        const Text(
+        _link(
+          'T&C Privacy Policy',
+          'T&C Privacy Policy will open here',
+          isMobile,
+          isVerySmall,
+          isUltraSmall,
+        ),
+        Text(
           ' & ',
-          style: TextStyle(fontSize: 12, color: AppColors.textGray),
+          style: TextStyle(
+            fontSize: _getTermsFontSize(isMobile, isVerySmall, isUltraSmall),
+            color: AppColors.textGray,
+          ),
         ),
-        _link('Tariff rates', 'Tariff rates will open here'),
+        _link(
+          'Tariff rates',
+          'Tariff rates will open here',
+          isMobile,
+          isVerySmall,
+          isUltraSmall,
+        ),
       ],
     );
   }
 
-  Widget _link(String text, String msg) {
+  Widget _link(
+    String text,
+    String msg,
+    bool isMobile,
+    bool isVerySmall,
+    bool isUltraSmall,
+  ) {
     return GestureDetector(
       onTap:
           () => ScaffoldMessenger.of(
@@ -189,12 +348,128 @@ class _EmailSectionWidgetState extends State<EmailSectionWidget> {
           ).showSnackBar(SnackBar(content: Text(msg))),
       child: Text(
         text,
-        style: const TextStyle(
-          fontSize: 12,
+        style: TextStyle(
+          fontSize: _getTermsFontSize(isMobile, isVerySmall, isUltraSmall),
           color: AppColors.linkBlue,
           decoration: TextDecoration.underline,
         ),
       ),
     );
+  }
+
+  // Helper methods
+  Color _getBorderColor(bool hasText) {
+    if (!hasText) return AppColors.borderColor;
+    return _isValid ? AppColors.borderValid : AppColors.borderError;
+  }
+
+  String _getHintText(bool isMobile, bool isVerySmall) {
+    if (isVerySmall) return 'your@email.com';
+    return 'suhani@joshigmail.com';
+  }
+
+  // Responsive sizing methods
+  double _getMaxFormWidth(bool isMobile, bool isTablet, double containerWidth) {
+    if (isMobile) return containerWidth;
+    if (isTablet) return containerWidth * 0.9;
+    return 500; // Desktop max width
+  }
+
+  double _getTitleFontSize(bool isMobile, bool isVerySmall, bool isUltraSmall) {
+    if (isUltraSmall) return 24;
+    if (isVerySmall) return 28;
+    if (isMobile) return 30;
+    return 32; // Desktop
+  }
+
+  double _getSubtitleFontSize(
+    bool isMobile,
+    bool isVerySmall,
+    bool isUltraSmall,
+  ) {
+    if (isUltraSmall) return 12;
+    return 14; // Standard
+  }
+
+  double _getLabelFontSize(bool isMobile, bool isVerySmall, bool isUltraSmall) {
+    if (isUltraSmall) return 12;
+    if (isVerySmall) return 13;
+    return 14; // Standard
+  }
+
+  double _getInputFontSize(bool isMobile, bool isVerySmall, bool isUltraSmall) {
+    if (isUltraSmall) return 14;
+    if (isVerySmall) return 15;
+    return 16; // Standard
+  }
+
+  double _getButtonFontSize(bool isMobile, bool isVerySmall) {
+    if (isVerySmall) return 14;
+    return 16; // Standard
+  }
+
+  double _getMessageFontSize(
+    bool isMobile,
+    bool isVerySmall,
+    bool isUltraSmall,
+  ) {
+    if (isUltraSmall) return 10;
+    if (isVerySmall) return 11;
+    return 12; // Standard
+  }
+
+  double _getTermsFontSize(bool isMobile, bool isVerySmall, bool isUltraSmall) {
+    if (isUltraSmall) return 10;
+    return 12; // Standard
+  }
+
+  double _getValidationIconSize(bool isMobile, bool isVerySmall) {
+    if (isVerySmall) return 18;
+    return 20; // Standard
+  }
+
+  double _getMessageIconSize(bool isMobile, bool isVerySmall) {
+    if (isVerySmall) return 14;
+    return 16; // Standard
+  }
+
+  double _getBorderRadius(bool isMobile, bool isVerySmall) {
+    if (isVerySmall) return 6;
+    return 8; // Standard
+  }
+
+  double _getBorderWidth(bool isMobile, bool hasText) {
+    if (hasText) return 1.5;
+    return 1; // Standard
+  }
+
+  double _getInputLineHeight(bool isMobile) {
+    return isMobile ? 1.4 : 1.5;
+  }
+
+  double _getTitleSpacing(bool isMobile) {
+    return isMobile ? 6 : 8;
+  }
+
+  double _getSectionSpacing(bool isMobile, bool isVerySmall) {
+    if (isVerySmall) return 24;
+    if (isMobile) return 32;
+    return 40; // Desktop
+  }
+
+  double _getSmallSpacing(bool isMobile) {
+    return isMobile ? 6 : 8;
+  }
+
+  double _getButtonPadding(bool isMobile, bool isVerySmall) {
+    if (isVerySmall) return 12;
+    return 16; // Standard
+  }
+
+  EdgeInsets _getInputPadding(bool isMobile, bool isTablet, bool isVerySmall) {
+    final horizontal = isVerySmall ? 12.0 : 16.0;
+    final vertical = isVerySmall ? 12.0 : 16.0;
+
+    return EdgeInsets.symmetric(horizontal: horizontal, vertical: vertical);
   }
 }
